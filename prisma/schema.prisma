@@ -7,10 +7,10 @@ generator client {
   output   = "../app/generated/prisma"
 }
 
+// Turso (libSQL) is SQLite-compatible. The connection URL lives in prisma.config.ts,
+// and the runtime connection is made through @prisma/adapter-libsql (see lib/prisma.ts).
 datasource db {
-  provider = "libsql"
-  url      = env("TURSO_DATABASE_URL")
-  token    = env("TURSO_AUTH_TOKEN")
+  provider = "sqlite"
 }
 
 /// المنتج المعروض في المتجر
