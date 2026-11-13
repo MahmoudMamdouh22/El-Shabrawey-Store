@@ -70,10 +70,13 @@ export async function placeOrderAction(
   for (const line of lines) {
     const p = byId.get(line.productId);
     if (!p) continue; // منتج غير موجود/غير متاح — نتجاهله
-    if (p.type === "physical" && p.stockQuantity === null)
-      return { error: `كمية مخزون ${p.name} غير محددة. تواصل معنا قبل إتمام الطلب.` };
-    if (p.type === "physical" && p.stockQuantity < line.qty)
-      return { error: `الكمية المطلوبة من ${p.name} أكبر من المتاح (${p.stockQuantity} قطعة).` };
+    if (p.type === "physical") {
+      const stockQuantity = p.stockQuantity;
+      if (stockQuantity === null)
+        return { error: `كمية مخزون ${p.name} غير محددة. تواصل معنا قبل إتمام الطلب.` };
+      if (stockQuantity < line.qty)
+        return { error: `الكمية المطلوبة من ${p.name} أكبر من المتاح (${stockQuantity} قطعة).` };
+    }
     items.push({
       productId: p.id,
       name: p.name,
