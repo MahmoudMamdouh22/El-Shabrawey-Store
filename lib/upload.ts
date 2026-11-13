@@ -1,6 +1,4 @@
 import "server-only";
-import { writeFile, mkdir } from "node:fs/promises";
-import path from "node:path";
 import { getStore } from "@netlify/blobs";
 import { randomUUID } from "node:crypto";
 
@@ -25,17 +23,39 @@ export async function saveImage(
   const key = `${subdir}/${filename}`;
   const arrayBuffer = await file.arrayBuffer();
 
-  if (process.env.NETLIFY) {
-    // نستخدم Netlify Blobs للإنتاج
-    const store = getStore({ name: "uploads", consistency: "strong" });
-    await store.set(key, arrayBuffer);
-    // نرجع مسار بيبدأ بـ /api/uploads عشان نخدمه من الـ Blobs
-    return `/api/uploads/${key}`;
-  } else {
-    // نستخدم التخزين المحلي للتطوير
-    const dir = path.join(process.cwd(), "public", "uploads", subdir);
-    await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, filename), Buffer.from(arrayBuffer));
-    return `/uploads/${subdir}/${filename}`;
+  // دائماً نستخدم Netlify Blobs لضمان التخزين الدائم على Netlify
+  const store = getStore({ name: "uploads", consistency: "strong" });
+  await store.set(key, arrayBuffer);
+
+  // نرجع مسار يُمكن استدعاؤه عبر API route
+  return `/api/uploads/${key}`;
+}
+
+/** يحفظ صورة محلية للتطوير فقط (للتوثيق أو الاستخدام غير الإنتاجي) */
+export async function saveImageLocal(
+  file: File,
+  subdir: string,
+  maxBytes = DEFAULT_MAX
+): Promise<string> {
+  if (!ALLOWED_IMAGE.includes(file.type)) {
+    throw new Error("الصورة لازم تكون JPG أو PNG أو WEBP.");
   }
+  if (file.size > maxBytes) {
+    throw new Error("حجم الصورة كبير (الحد الأقصى 5 ميجا).");
+  }
+
+  const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const filename = `${Date.now()}-${randomUUID()}.${ext}`;
+  const arrayBuffer = await file.arrayBuffer();
+
+  // حفظ مؤقت على القرص المحلي
+  const dir = `public/uploads/${subdir}`;
+  const fullPath = `${dir}/${filename}`;
+
+  // كتابة الملف على القرص (للتطوير المحلي)
+  const fs = await import("node:fs/promises");
+  await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(fullPath, Buffer.from(arrayBuffer));
+
+  return `/uploads/${subdir}/${filename}`;
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getStore } from "@netlify/blobs";
 
 export const dynamic = "force-dynamic";
+export const revalidate = false; // عدم التحقق من الوقت مباشرةً
 
 const MIME_TYPES: Record<string, string> = {
   jpg: "image/jpeg",
