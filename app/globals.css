@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+/* EL-Shabrawey Store: electric blue with light and deep navy modes. */
+@theme inline {
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-bg: var(--store-bg);
+  --color-surface: var(--store-surface);
+  --color-surface-2: var(--store-surface-2);
+  --color-line: var(--store-line);
+  --color-fg: var(--store-fg);
+  --color-muted: var(--store-muted);
+  --font-sans: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+  --store-bg: #f4f7fc;
+  --store-surface: #ffffff;
+  --store-surface-2: #eaf0f9;
+  --store-line: #d6e0ef;
+  --store-fg: #101a2b;
+  --store-muted: #5b6b82;
+  --brand-50: #eff6ff;
+  --brand-100: #dbeafe;
+  --brand-200: #bfdbfe;
+  --brand-300: #1d4ed8;
+  --brand-400: #1d4ed8;
+  --brand-500: #2563eb;
+  --brand-600: #1d4ed8;
+  --brand-700: #1e40af;
+  --brand-800: #1e3a8a;
+  --brand-900: #172554;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --store-bg: #050b18;
+  --store-surface: #0b1630;
+  --store-surface-2: #122449;
+  --store-line: #20385f;
+  --store-fg: #f1f6ff;
+  --store-muted: #a8bad7;
+  --brand-50: #eff6ff;
+  --brand-100: #dbeafe;
+  --brand-200: #bfdbfe;
+  --brand-300: #93c5fd;
+  --brand-400: #60a5fa;
+  --brand-500: #3b82f6;
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --brand-800: #1e40af;
+  --brand-900: #172554;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--color-bg);
+  color: var(--color-fg);
+}
+
+body {
+  min-height: 100%;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.text-gradient {
+  background: linear-gradient(100deg, #173d91 0%, #1763e9 48%, #0ea5e9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+:root[data-theme="dark"] .text-gradient {
+  background: linear-gradient(100deg, #ffffff 0%, #a8caff 48%, #4e8cff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-brand-gradient {
+  background: linear-gradient(135deg, #1748bd 0%, #2563eb 55%, #1687ed 100%);
+}
+
+.bg-brand-gradient:hover {
+  background: linear-gradient(135deg, #1e55d4 0%, #3275fa 55%, #2498ff 100%);
+}
+
+.glow {
+  box-shadow: 0 0 80px -20px rgba(37, 99, 235, 0.48);
+}
