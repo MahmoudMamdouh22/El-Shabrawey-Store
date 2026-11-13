@@ -1,11 +1,13 @@
 import "server-only";
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { getStore } from "@netlify/blobs";
+import { randomUUID } from "node:crypto";
 
 const ALLOWED_IMAGE = ["image/jpeg", "image/png", "image/webp"];
 const DEFAULT_MAX = 5 * 1024 * 1024; // 5MB
 
-/** يحفظ صورة مرفوعة في public/uploads/<subdir> ويرجّع المسار العام */
+/** يحفظ صورة مرفوعة ويرجّع المسار العام */
 export async function saveImage(
   file: File,
   subdir: string,
@@ -17,15 +19,23 @@ export async function saveImage(
   if (file.size > maxBytes) {
     throw new Error("حجم الصورة كبير (الحد الأقصى 5 ميجا).");
   }
-  const ext =
-    file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-  const rand = Array.from({ length: 20 }, () =>
-    "abcdefghijklmnopqrstuvwxyz0123456789"[Math.floor(Math.random() * 36)]
-  ).join("");
-  const filename = `${Date.now()}-${rand}.${ext}`;
-  const dir = path.join(process.cwd(), "public", "uploads", subdir);
-  await mkdir(dir, { recursive: true });
-  const bytes = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(dir, filename), bytes);
-  return `/uploads/${subdir}/${filename}`;
+
+  const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const filename = `${Date.now()}-${randomUUID()}.${ext}`;
+  const key = `${subdir}/${filename}`;
+  const arrayBuffer = await file.arrayBuffer();
+
+  if (process.env.NETLIFY) {
+    // نستخدم Netlify Blobs للإنتاج
+    const store = getStore({ name: "uploads", consistency: "strong" });
+    await store.set(key, arrayBuffer);
+    // نرجع مسار بيبدأ بـ /api/uploads عشان نخدمه من الـ Blobs
+    return `/api/uploads/${key}`;
+  } else {
+    // نستخدم التخزين المحلي للتطوير
+    const dir = path.join(process.cwd(), "public", "uploads", subdir);
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, filename), Buffer.from(arrayBuffer));
+    return `/uploads/${subdir}/${filename}`;
+  }
 }
