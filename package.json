@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.9",
-    "@prisma/adapter-better-sqlite3": "^7.8.0",
     "@prisma/adapter-libsql": "7.10.1",
     "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",

@@ -1,7 +1,6 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../app/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@elshabrawey.store";
@@ -57,21 +56,16 @@ const previewBrands: Record<string, string> = {
 const tursoUrl = process.env.TURSO_DATABASE_URL?.trim();
 const tursoAuthToken = process.env.TURSO_AUTH_TOKEN?.trim();
 
-if (Boolean(tursoUrl) !== Boolean(tursoAuthToken)) {
-  throw new Error("يجب ضبط TURSO_DATABASE_URL وTURSO_AUTH_TOKEN معًا.");
+if (!tursoUrl || !tursoAuthToken) {
+  throw new Error("يجب ضبط TURSO_DATABASE_URL وTURSO_AUTH_TOKEN قبل تشغيل seed.");
 }
 
-const adapter =
-  tursoUrl && tursoAuthToken
-    ? new PrismaLibSql({ url: tursoUrl, authToken: tursoAuthToken })
-    : new PrismaBetterSqlite3({
-        url: process.env.DATABASE_URL ?? "file:./dev.db",
-      });
-
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient({
+  adapter: new PrismaLibSql({ url: tursoUrl, authToken: tursoAuthToken }),
+});
 async function main() {
   const previewOnly = process.argv.includes("--preview-only");
-  console.log(tursoUrl ? "Using configured Turso database." : "Using local SQLite database.");
+  console.log("Using configured Turso database.");
   if (!previewOnly && !ADMIN_PASSWORD) {
     throw new Error("Set ADMIN_PASSWORD before seeding the store administrator.");
   }

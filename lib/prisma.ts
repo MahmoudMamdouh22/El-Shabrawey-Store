@@ -1,25 +1,20 @@
 import "server-only";
 import { PrismaClient } from "@/app/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-// استخدم Turso عند وجود متغيرَيها، وإلا استمر على SQLite المحلية للتطوير.
+// التطبيق يتصل بقاعدة Turso فقط. لا نرجع إلى قاعدة محلية بصمت عند غياب الإعدادات.
 function makeClient() {
   const tursoUrl = process.env.TURSO_DATABASE_URL?.trim();
   const tursoAuthToken = process.env.TURSO_AUTH_TOKEN?.trim();
 
-  if (Boolean(tursoUrl) !== Boolean(tursoAuthToken)) {
-    throw new Error("يجب ضبط TURSO_DATABASE_URL وTURSO_AUTH_TOKEN معًا.");
+  if (!tursoUrl || !tursoAuthToken) {
+    throw new Error(
+      "قاعدة البيانات غير مهيأة. اضبط TURSO_DATABASE_URL وTURSO_AUTH_TOKEN.",
+    );
   }
 
-  const adapter = tursoUrl && tursoAuthToken
-    ? new PrismaLibSql({ url: tursoUrl, authToken: tursoAuthToken })
-    : new PrismaBetterSqlite3({
-        url: process.env.DATABASE_URL ?? "file:./dev.db",
-      });
-
   return new PrismaClient({
-    adapter,
+    adapter: new PrismaLibSql({ url: tursoUrl, authToken: tursoAuthToken }),
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 }
