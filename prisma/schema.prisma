@@ -4,10 +4,102 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
-  output          = "../app/generated/prisma"
+  output   = "../app/generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
 }
+
+/// المنتج المعروض في المتجر
+model Product {
+  id             String   @id @default(cuid())
+  slug           String   @unique // يُستخدم في رابط صفحة المنتج
+  sku            String?  @unique // رمز داخلي للمخزون
+  stockQuantity  Int?     // null = لم تُحدّد الكمية بعد
+  name           String
+  category       String   @default("other")
+  brand          String?
+  model          String?
+  condition      String   @default("new") // new | used | refurbished
+  specifications String   @default("[]") // JSON array of {label, value}
+  warranty       String?
+  delivery       String?
+  isDemo         Boolean  @default(false) // sample item shown only for catalog preview
+  shortDesc      String? // وصف مختصر يظهر في الكارت
+  description    String   @default("") // الوصف الكامل لصفحة المنتج
+  priceCents     Int // السعر بالقروش (لتفادي مشاكل الأرقام العشرية)
+  compareAtCents Int? // السعر قبل الخصم (اختياري) لعرض الخصم
+  currency       String   @default("EGP")
+  type           String   @default("physical") // منتجات المتجر الفعلية
+  images         String   @default("[]") // مصفوفة روابط صور بصيغة JSON
+  featured       Boolean  @default(false) // يظهر في قسم "مميز" بصفحة الهبوط
+  active         Boolean  @default(true) // معروض للبيع؟
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([active, featured])
+  @@index([active, category])
+  @@index([active, brand])
+  @@index([active, stockQuantity])
+}
+
+/// العميل/المستخدم (بأدوار: عميل أو أدمن)
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  role         String   @default("customer") // "customer" | "admin"
+  orders       Order[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// الطلب — مرتبط بعميل مسجّل أو زائر (userId = null)
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique // رقم مقروء للتتبّع (ESH-XXXXXX)
+  userId        String? // null = طلب كزائر
+  user          User?       @relation(fields: [userId], references: [id])
+  customerName  String
+  customerPhone String
+  customerEmail String?
+  address       String? // للمنتجات الملموسة
+  paymentMethod String // cash | vodafone_cash | etisalat_cash | orange_cash | instapay
+  status        String      @default("pending") // pending | confirmed | delivered | cancelled | returned
+  subtotalCents Int
+  shippingCents Int         @default(0) // تكلفة الشحن وقت الطلب (snapshot)
+  totalCents    Int         @default(0) // الإجمالي النهائي = subtotal + shipping
+  proofImage    String? // مسار صورة إثبات الدفع (للتحويل)
+  note          String?
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+/// إعدادات المتجر (مفتاح/قيمة) — البكسلات، العرض الإضافي، وأي إعداد مستقبلي
+model Setting {
+  key       String   @id
+  value     String   @default("")
+  updatedAt DateTime @updatedAt
+}
+
+/// عنصر داخل الطلب (نسخة ثابتة من بيانات المنتج وقت الشراء)
+model OrderItem {
+  id         String  @id @default(cuid())
+  orderId    String
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String? // مرجع للمنتج الأصلي (لو موجود)
+  name       String // snapshot للاسم
+  priceCents Int // snapshot للسعر
+  qty        Int
+  type       String // نوع المنتج للطلب التاريخي
+
+  @@index([orderId])
+}
+

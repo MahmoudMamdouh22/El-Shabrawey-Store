@@ -9,6 +9,31 @@ import { isValidEmail, isValidPhone, cleanStr } from "@/lib/validation";
 import { isPaymentMethod, needsPaymentProof } from "@/lib/payments";
 import { savePaymentProof } from "@/lib/payment-proofs";
 
+type Product = {
+  id: string;
+  name: string;
+  slug: string;
+  sku: string | null;
+  stockQuantity: number | null;
+  category: string;
+  brand: string | null;
+  model: string | null;
+  condition: string;
+  specifications: string;
+  warranty: string | null;
+  delivery: string | null;
+  isDemo: boolean;
+  shortDesc: string | null;
+  description: string;
+  priceCents: number;
+  compareAtCents: number | null;
+  currency: string;
+  type: string;
+  images: string;
+  featured: boolean;
+  active: boolean;
+};
+
 export type CheckoutState = {
   error?: string;
   ok?: boolean;
@@ -58,7 +83,7 @@ export async function placeOrderAction(
   const lines = parseCart(cleanStr(formData.get("items"), 20000));
   if (lines.length === 0) return { error: "سلتك فاضية." };
 
-  const products = await prisma.product.findMany({
+  const products: Product[] = await prisma.product.findMany({
     where: { id: { in: lines.map((l) => l.productId) }, active: true },
   });
   if (products.some((product) => product.isDemo)) {

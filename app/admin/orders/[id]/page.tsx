@@ -63,7 +63,7 @@ export default async function AdminOrderDetail({ params }: Props) {
       <section className="rounded-2xl border border-line bg-surface p-5">
         <h3 className="mb-4 font-bold text-fg">المنتجات</h3>
         <ul className="flex flex-col gap-3">
-          {order.items.map((item) => (
+          {(order.items as Array<{ id: string; name: string; priceCents: number; qty: number; type: string }>).map((item) => (
             <li
               key={item.id}
               className="flex items-center justify-between gap-3 border-b border-line pb-3 last:border-0 last:pb-0"

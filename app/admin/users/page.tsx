@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { User } from "@/app/generated/prisma";
 
 export const dynamic = "force-dynamic";
 
