@@ -7,6 +7,15 @@ import { logoutAction } from "@/app/actions/auth";
 import { formatPrice } from "@/lib/format";
 import { OrderStatusBadge } from "@/components/OrderStatus";
 
+type Order = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  totalCents: number | null;
+  subtotalCents: number;
+  items: Array<{ id: string; name: string; priceCents: number; qty: number; type: string }>;
+};
+
 export const metadata: Metadata = { title: "حسابي" };
 export const dynamic = "force-dynamic";
 
@@ -14,7 +23,7 @@ export default async function AccountPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/account");
 
-  const orders = await getUserOrders(user.id);
+  const orders: Order[] = await getUserOrders(user.id);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
