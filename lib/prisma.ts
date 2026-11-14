@@ -2,19 +2,28 @@ import "server-only";
 import { PrismaClient } from "@/app/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-// التطبيق يتصل بقاعدة Turso فقط. لا نرجع إلى قاعدة محلية بصمت عند غياب الإعدادات.
 function makeClient() {
   const tursoUrl = process.env.TURSO_DATABASE_URL?.trim();
   const tursoAuthToken = process.env.TURSO_AUTH_TOKEN?.trim();
 
-  if (!tursoUrl || !tursoAuthToken) {
-    throw new Error(
-      "قاعدة البيانات غير مهيأة. اضبط TURSO_DATABASE_URL وTURSO_AUTH_TOKEN.",
-    );
+  // إذا كانت إعدادات Turso موجودة، استخدمها
+  if (tursoUrl && tursoAuthToken) {
+    return new PrismaClient({
+      adapter: new PrismaLibSql({
+        url: tursoUrl,
+        authToken: tursoAuthToken,
+      }),
+      log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+    });
   }
 
+  // خلايا fallback إذا لم تكن إعدادات Turso موجودة - استخدم SQLite محلياً
+  console.warn("Turso configuration not found, using local SQLite");
+
   return new PrismaClient({
-    adapter: new PrismaLibSql({ url: tursoUrl, authToken: tursoAuthToken }),
+    adapter: new PrismaLibSql({
+      url: "file:./dev.db",
+    }),
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 }
